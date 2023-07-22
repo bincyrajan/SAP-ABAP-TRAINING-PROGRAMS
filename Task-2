@@ -1,29 +1,22 @@
 " Depending on Plant ID, print all the materials under this plant ID from table MARD.
 *&---------------------------------------------------------------------*
-*& Report ZBINCY_PLANT_TRIAL_1
+*& Report ZBINCY_MATERIALPLANT_NW
 *&---------------------------------------------------------------------*
 *&
 *&---------------------------------------------------------------------*
-REPORT zbincy_plant_trial_1.
-PARAMETERS p_werks TYPE mard-werks.
-TYPES : BEGIN OF ty_mard,
-          werks TYPE mard-werks,
-          matnr TYPE mard-matnr,
-          lgort TYPE mard-lgort,
-        END OF ty_mard.
-
-DATA dy_mard TYPE ty_mard.
-DATA dy_maktx TYPE makt-maktx.
-
-WRITE : / 'plant no',
-         20 'material no',
-         50 'material description',
-         90 'storage location'.
-
-  SELECT werks matnr lgort FROM mard INTO dy_mard WHERE werks EQ p_werks.
-    SELECT SINGLE maktx FROM makt INTO dy_maktx WHERE matnr EQ dy_mard-matnr.
-    WRITE : / dy_mard-werks,
-            20 dy_mard-matnr,
-            50 dy_maktx,
-            90 dy_mard-lgort.
-  ENDSELECT.
+REPORT ZBINCY_MATERIALPLANT_NW.
+PARAMETERS P_WERKS TYPE MARD-WERKS.
+TYPES : BEGIN OF TY_MARD,
+        WERKS TYPE MARD-WERKS,
+        MATNR TYPE MARD-MATNR,
+        LGORT TYPE MARD-LGORT,
+  END OF ty_mard.
+  DATA DT_MARD TYPE ty_mard.
+  WRITE : / 'PLANT NO',
+           20 'MATERIAL NO',
+           40 'STORAGE LOCATION'.
+  SELECT werks matnr lgort from mard INTO dt_mard where werks eq p_werks.
+    write : / dt_mard-werks,
+             20 dt_mard-matnr,
+             40 dt_mard-lgort.
+    ENDSELECT.

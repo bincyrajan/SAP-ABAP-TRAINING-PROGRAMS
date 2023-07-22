@@ -1,4 +1,4 @@
-" Depending on Plant ID, print all the materialsand also material description under this plant ID from table MARD and MAKT.
+" Depending on Plant ID, print all the materials and also material description under this plant ID from table MARD and MAKT.
 *&---------------------------------------------------------------------*
 *& Report ZBINCY_PLANT_TRIAL_1
 *&---------------------------------------------------------------------*

@@ -1,1 +1,1 @@
-
+" Depending on Plant ID, print all the materials, material description, plant no and plant name under this plant ID from tables MARD, MAKT and T001W.

@@ -1,1 +1,91 @@
 "Billing Document with sub-routine
+
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_BILLINGDOC_SUBROUTINE
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbincy_billingdoc_subroutine .
+
+
+
+TYPES : BEGIN OF ty_kna1,
+          kunnr TYPE kna1-kunnr,
+          name1 TYPE kna1-name1,
+        END OF ty_kna1.
+
+TYPES : BEGIN OF ty_t006a,
+          msehi TYPE t006a-msehi,
+          mseht TYPE t006a-mseht,
+        END OF ty_t006a.
+" Data Objects
+DATA : it_vbrk TYPE TABLE OF Zbilling,
+       wa_vbrk LIKE LINE OF it_vbrk.
+DATA : it_vbrp TYPE TABLE OF zitem,
+       wa_vbrp LIKE LINE OF it_vbrp.
+DATA : it_header TYPE zdemo_t_header,
+       it_item   TYPE zdemo_t_item,
+       wa_header LIKE LINE OF it_header,
+       wa_item   LIKE LINE OF it_item.
+DATA it_kna1 TYPE STANDARD TABLE OF ty_kna1.
+DATA it_t006a TYPE STANDARD TABLE OF ty_t006a.
+DATA : wa_kna1  LIKE LINE OF it_kna1,
+       wa_t006a LIKE LINE OF it_t006a.
+
+" Provide selection screen for user Input
+
+START-OF-SELECTION.
+  SELECT-OPTIONS s_vbeln FOR wa_vbrk-vbeln.
+  " Data Selection
+  PERFORM get_header IN PROGRAM zalfy_billing_form USING s_vbeln[]
+                                                  CHANGING it_header.
+
+  PERFORM get_item IN PROGRAM zalfy_billing_form USING s_vbeln[]
+                                                  CHANGING it_item.
+
+
+  WRITE : / 'Doc No:',15 'Payer:',45 'Date:',65 'Net Value:'.
+
+
+*  SORT it_item BY vbeln.
+  LOOP AT it_header INTO wa_header.
+
+
+    SKIP.
+*    READ TABLE it_header INTO wa_header WITH KEY vbeln = wa_item-vbeln.
+    WRITE : / wa_header-vbeln,
+              wa_header-name1,
+              wa_header-fkdat,
+              wa_header-netwr.
+    HIDE wa_header-vbeln.
+    SKIP.
+    CLEAR wa_header.
+  ENDLOOP.
+  CLEAR wa_header.
+
+AT LINE-SELECTION.
+  WRITE : / 'Item',
+           10 'Material',
+           40 'Quantity',
+           50'UoM',
+           70 'Net Value'.
+
+  LOOP AT it_item INTO wa_item WHERE vbeln EQ wa_header-vbeln.
+
+    WRITE : / wa_item-posnr,
+            10  wa_item-matnr LEFT-JUSTIFIED,
+            40  wa_item-fklmg LEFT-JUSTIFIED,
+             50 wa_item-mseht LEFT-JUSTIFIED,
+             70 wa_item-netwr LEFT-JUSTIFIED.
+  ENDLOOP.
+
+  SET PF-STATUS 'LIST'.
+
+AT USER-COMMAND.
+  CASE sy-ucomm.
+    WHEN 'PDF'.
+
+    WHEN 'EXCEL'.
+
+    WHEN OTHERS.
+  ENDCASE.

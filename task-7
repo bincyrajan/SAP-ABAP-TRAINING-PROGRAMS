@@ -1,3 +1,45 @@
 "create 2 tables , one is for header data and another for item data .Generate invoice based on the document no using internal table.
 " Header table : zvbrk_01
 " item table : zvbrp_011
+
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_INVOICE_INTERNALTABLE
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBINCY_INVOICE_INTERNALTABLE.
+PARAMETERS P_VBELN TYPE ZVBRK_01-VBELN.
+TYPES : BEGIN OF TY_ZVBRK_01,
+        VBELN TYPE ZVBRK_01-VBELN,
+        KUNRG TYPE ZVBRK_01-KUNRG,
+        FKDAT TYPE ZVBRK_01-FKDAT,
+        NETWR TYPE ZVBRK_01-NETWR,
+        END OF TY_ZVBRK_01.
+TYPES : BEGIN OF TR_ZVBRP_011,
+        POSNR TYPE ZVBRP_011-POSNR,
+        FKIMG TYPE ZVBRP_011-FKIMG,
+        VRKME TYPE ZVBRP_011-VRKME,
+        NETWR TYPE ZVBRP_011-NETWR,
+        MATNR TYPE ZVBRP_011-MATNR,
+        END OF TR_ZVBRP_011.
+DATA ST_ZVBRK_01 TYPE TY_ZVBRK_01.
+DATA : it_ZVBRP_011 TYPE TABLE OF TR_ZVBRP_011,
+       wa_ZVBRP_011 LIKE LINE OF it_ZVBRP_011.
+SELECT SINGLE VBELN KUNRG FKDAT NETWR FROM ZVBRK_01 INTO ST_ZVBRK_01 WHERE VBELN EQ P_VBELN.
+WRITE : /'DOCUMENT NO :',ST_ZVBRK_01-VBELN,
+           /'PAYER : ',ST_ZVBRK_01-KUNRG,
+           /'DATE : ',ST_ZVBRK_01-FKDAT,
+           /'NET VALUE :',ST_ZVBRK_01-NETWR.
+   WRITE : /'ITEM',
+          30 'MATERIAL',
+           60 'QTY',
+           90 'UOM',
+           120'NET VALUE'.
+SELECT POSNR FKIMG VRKME NETWR MATNR from ZVBRP_011 into table it_ZVBRP_011 WHERE VBELN EQ ST_ZVBRK_01-VBELN.
+Loop at it_ZVBRP_011 into wa_ZVBRP_011.
+write : / wa_ZVBRP_011-POSNR ,
+        30 wa_ZVBRP_011-MATNR left-justified,
+        60 wa_ZVBRP_011-FKIMG left-justified,
+        90 wa_ZVBRP_011-VRKME,
+        120 wa_ZVBRP_011-NETWR.
+endloop .

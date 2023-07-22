@@ -1,4 +1,4 @@
-" Depending on user input, print the Material description and language from the table MAKT.
+" Depending on material no, print the Material description and language from the table MAKT.
 *&---------------------------------------------------------------------*
 *& Report ZBINCY_MATERIALDESCRIPTION_NW
 *&---------------------------------------------------------------------*

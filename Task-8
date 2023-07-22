@@ -3,3 +3,63 @@
 " item table : zvbrp_011
 " Payer name :kna1
 " uom description : t006a
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_INVOICE_INTERNALTBL_NE
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbincy_invoice_internaltbl_ne.
+PARAMETERS p_vbeln TYPE zvbrk_01-vbeln.
+TYPES : BEGIN OF ty_zvbrk_01,
+          vbeln TYPE zvbrk_01-vbeln,
+          kunrg TYPE zvbrk_01-kunrg,
+          fkdat TYPE zvbrk_01-fkdat,
+          netwr TYPE zvbrk_01-netwr,
+        END OF ty_zvbrk_01.
+TYPES : BEGIN OF ty_zvbrp_011,
+          posnr TYPE zvbrp_011-posnr,
+          matnr TYPE zvbrp_011-matnr,
+          fkimg TYPE zvbrp_011-fkimg,
+          vrkme TYPE zvbrp_011-vrkme,
+          netwr TYPE zvbrp_011-netwr,
+        END OF ty_zvbrp_011.
+TYPES : BEGIN OF ty_t006a,
+          msehi TYPE t006a-msehi,
+          mseht TYPE t006a-mseht,
+        END OF ty_t006a.
+DATA dt_zvbrk_01 TYPE ty_zvbrk_01.
+DATA dt_name1 TYPE kna1-name1.
+*    DATA dt_mseht TYPE t006a-mseht.
+DATA : it_t006a TYPE TABLE OF ty_t006a,
+       wa_t006a LIKE LINE OF it_t006a.
+
+DATA : it_zvbrp_011 TYPE TABLE OF ty_zvbrp_011,
+       WA_zvbrp_011 LIKE LINE OF it_zvbrp_011.
+
+
+
+SELECT SINGLE vbeln kunrg fkdat netwr FROM zvbrk_01 INTO dt_zvbrk_01 WHERE vbeln EQ p_vbeln.
+SELECT SINGLE name1 FROM kna1 INTO dt_name1 WHERE kunnr EQ dt_zvbrk_01-kunrg.
+WRITE : 'DOCUMENT NO : ',dt_zvbrk_01-vbeln,
+      / 'PAYER NO : ' , dt_zvbrk_01-kunrg,
+      / 'PAYER NAME',dt_name1,
+     / 'DATE :' , dt_zvbrk_01-fkdat,
+     / 'NET VALUE : ', dt_zvbrk_01-netwr.
+WRITE : / 'ITEM',
+     30 'MATERIAL',
+     60 'QTY',
+     90 'UOM',
+     120 'NET VALUE'.
+SELECT posnr matnr fkimg vrkme netwr FROM zvbrp_011 INTO TABLE  it_zvbrp_011 WHERE vbeln EQ dt_zvbrk_01-vbeln.
+SELECT msehi mseht FROM t006a INTO TABLE  it_t006a FOR ALL ENTRIES IN it_zvbrp_011 WHERE msehi EQ  it_zvbrp_011-vrkme.
+LOOP AT it_t006a INTO wa_t006a.
+ENDLOOP.
+
+LOOP AT it_zvbrp_011 INTO wa_zvbrp_011.
+  READ TABLE it_t006a INTO wa_t006a WITH KEY msehi = wa_zvbrp_011-vrkme.
+  WRITE : / wa_zvbrp_011-posnr,
+   30 wa_zvbrp_011-matnr,
+   60 wa_zvbrp_011-fkimg,
+   90 wa_t006a-mseht,
+   120 wa_zvbrp_011-netwr.
+ENDLOOP.

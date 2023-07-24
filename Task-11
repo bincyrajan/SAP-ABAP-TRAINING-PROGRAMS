@@ -1,1 +1,75 @@
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_TASK_1
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbincy_task_1.
+*PARAMETERS p_lfmon TYPE mard-lfmon.
+TYPES : BEGIN OF ty_mard,
+          matnr TYPE mard-matnr,
+          werks TYPE mard-werks,
+          lfgja TYPE mard-lfgja,
+          lfmon TYPE mard-lfmon,
+          lgort TYPE mard-lgort,
+        END OF ty_mard.
 
+DATA : it_mard TYPE TABLE OF ty_mard,
+       wa_mard LIKE LINE OF it_mard.
+PARAMETERS p_lfgja TYPE mard-lfgja OBLIGATORY.
+SELECT-OPTIONS s_lfmon FOR wa_mard-lfmon NO INTERVALS NO-EXTENSION.
+
+START-OF-SELECTION.
+  PERFORM get_data IN PROGRAM zbincy_task1_subroutine USING p_lfgja s_lfmon[] CHANGING it_mard.
+*  SELECT matnr werks lfgja lfmon lgort FROM mard INTO TABLE it_mard WHERE lfgja EQ p_lfgja AND lfmon IN s_lfmon .
+
+END-OF-SELECTION.
+  PERFORM get_display.
+FORM get_display.
+  cl_salv_table=>factory(
+  IMPORTING
+    r_salv_table = DATA(o_alv)
+  CHANGING
+    t_table = it_mard
+
+  ).
+
+  o_alv->display( ).
+ENDFORM.
+*  WRITE : 'MATERIAL NO',
+*         30 'PLANT NO',
+*         60 'YEAR',
+*         100 'MONTH',
+*        120  'STORAGE LOCATION'.
+*  IF sy-subrc IS INITIAL.
+*    LOOP AT it_mard INTO wa_mard.
+*      WRITE : wa_mard-matnr,
+*            30  wa_mard-werks,
+*            60  wa_mard-lfgja,
+*            100  wa_mard-lfmon,
+*            120  wa_mard-lgort.
+*    ENDLOOP.
+*  ENDIF.
+
+
+
+subroutine
+
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_TASK1_SUBROUTINE
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbincy_task1_subroutine.
+TYPES : BEGIN OF ty_mard,
+          matnr TYPE mard-matnr,
+          werks TYPE mard-werks,
+          lfgja TYPE mard-lfgja,
+          lfmon TYPE mard-lfmon,
+          lgort TYPE mard-lgort,
+        END OF ty_mard.
+TYPES in_ty_mard TYPE TABLE OF ty_mard.
+TYPES tr_lfmon TYPE RANGE OF mard-lfmon.
+FORM get_data USING f_p_lfgja TYPE mard-lfgja f_s_lfmon TYPE tr_lfmon CHANGING f_it_mard TYPE in_ty_mard.
+
+  SELECT matnr werks lfgja lfmon lgort FROM mard INTO TABLE f_it_mard WHERE lfgja EQ f_p_lfgja AND lfmon IN f_s_lfmon .
+ENDFORM.

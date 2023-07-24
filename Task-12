@@ -1,0 +1,53 @@
+" In billing document report,print header data in single page and if clicking on each material print item datas corresponding to that material.
+
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_BILLINGDOC_SEPARATE
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbincy_billingdoc_separate.
+
+DATA : it_zvbrk_01 TYPE TABLE OF zvbrk_01,
+       wa_zvbrk_01 LIKE LINE OF it_zvbrk_01.
+DATA : it_zvbrp_011 TYPE TABLE OF zvbrp_011,
+       wa_zvbrp_011 LIKE LINE OF it_zvbrp_011.
+SELECT-OPTIONS s_vbeln FOR wa_zvbrk_01-vbeln.
+
+START-OF-SELECTION.
+  " Data Selection
+  SELECT * FROM zvbrk_01 INTO TABLE it_zvbrk_01 WHERE vbeln IN s_vbeln.
+  WRITE : / 'Doc No:',
+            20 'Payer:',
+            40 'Date:',
+            60 'Net Value:'.
+  LOOP AT it_zvbrk_01 INTO wa_zvbrk_01.
+    WRITE : / wa_zvbrk_01-vbeln,
+                20 wa_zvbrk_01-kunrg,
+                40 wa_zvbrk_01-fkdat,
+                60 wa_zvbrk_01-netwr.
+    HIDE wa_zvbrk_01-vbeln.
+    SKIP.
+    CLEAR wa_zvbrk_01.
+  ENDLOOP.
+  CLEAR wa_zvbrk_01.
+
+AT LINE-SELECTION.
+  READ LINE sy-lilli.
+  IF sy-subrc = 0.
+    SELECT * FROM zvbrp_011 INTO TABLE it_zvbrp_011 WHERE vbeln = wa_zvbrk_01-vbeln."v_vbeln.
+    WRITE : / 'Item',
+               20 'Material',
+               40 'Quantity',
+               60 'UoM',
+               90 'Net Value'.
+    LOOP AT it_zvbrp_011 INTO wa_zvbrp_011.
+      "READ TABLE it_kna1 INTO wa_kna1 WITH KEY kunnr = wa_ekko-kunrg .
+      WRITE : / wa_zvbrp_011-posnr,
+                 20 wa_zvbrp_011-matnr,
+                 40 wa_zvbrp_011-fkimg,
+                 60 wa_zvbrp_011-vrkme,
+                 90 wa_zvbrp_011-netwr.
+
+    ENDLOOP.
+
+  ENDIF.

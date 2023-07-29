@@ -1,0 +1,52 @@
+"ALV
+
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_ALV
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBINCY_ALV.
+
+DATA : it_makt TYPE STANDARD TABLE OF makt.
+DATA v_matnr TYPE matnr.
+SELECT-OPTIONS s_matnr FOR v_matnr.
+START-OF-SELECTION.
+PERFORM get_data.
+
+END-OF-SELECTION.
+PERFORM display.
+*PERFORM display_pf.
+*&---------------------------------------------------------------------*
+*& Form get_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_data .
+SELECT * FROM makt INTO TABLE it_makt WHERE matnr In s_matnr.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form display
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display.
+CL_SALV_TABLE=>factory(
+  IMPORTING
+    r_salv_table   =   DATA(o_alv)                      " Basis Class Simple ALV Tables
+  CHANGING
+    t_table        = it_makt
+).
+o_alv->set_screen_status(
+  report        = 'ZBINCY_ALV'
+  pfstatus      = 'SALV_TABLE_STANDARD'
+).
+o_alv->display( ).
+
+
+ENDFORM.

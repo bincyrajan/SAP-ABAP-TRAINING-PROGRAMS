@@ -5,3 +5,43 @@
 " Payer name :kna1
 " uom description : t006a
 
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_BILLINGDOCUMENT_NEW
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBINCY_BILLINGDOCUMENT_NEW.
+PARAMETERS p_vbeln TYPE zvbrk_01-vbeln.
+
+
+data:st_zvbrk_01 TYPE zvbrk_01,
+      st_zvbrp_011 TYPE zvbrp_011.
+
+
+
+DATA:v_payer  TYPE kna1-name1,
+     v_name TYPE t006a-mseht.
+
+
+
+SELECT SINGLE * FROM zvbrk_01 INTO st_zvbrk_01 WHERE vbeln EQ p_vbeln.
+  SELECT SINGLE name1 FROM kna1 INTO v_payer WHERE kunnr EQ st_zvbrk_01-kunrg.
+  WRITE:/ 'Document No:',st_zvbrk_01-vbeln,
+  / 'Date:',st_zvbrk_01-fkdat,
+  / 'payer:',v_payer,
+  / 'Net value:',st_zvbrk_01-netwr LEFT-JUSTIFIED.
+
+SKIP.
+WRITE:/ 'Item',
+20'Material',
+40'Quantity',
+60'unitofm',
+80'networth'.
+
+SELECT SINGLE * FROM zvbrp_011 INTO st_zvbrp_011 WHERE vbeln EQ p_vbeln.
+  SELECT SINGLE mseht FROM t006a INTO v_name WHERE mseht EQ st_zvbrp_011-vrkme.
+  WRITE:/ st_zvbrp_011-posnr,
+  20 st_zvbrp_011-matnr,
+  40 st_zvbrp_011-fkimg,
+  60 v_name,
+  80 st_zvbrp_011-netwr.

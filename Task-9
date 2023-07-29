@@ -1,1 +1,64 @@
+Billing document with select option
+
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_BILLDOC_SECLTOP
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBINCY_BILLDOC_SECLTOP.
+
+TYPES:BEGIN OF ty_kna1,
+        kunnr TYPE kna1-kunnr,
+        name1 TYPE kna1-name1,
+      END OF ty_kna1.
+
+TYPES:BEGIN OF ty_t006a,
+        msehi TYPE t006a-msehi,
+        mseht TYPE t006a-mseht,
+      END OF ty_t006a.
+
+
+DATA:it_zvbrk_01 TYPE TABLE OF zvbrk_01,
+     wa_zvbrk_01  LIKE LINE OF it_zvbrk_01,
+     it_zvbrp_011  TYPE TABLE OF zvbrp_011,
+     wa_zvbrp_011  LIKE LINE OF it_zvbrp_011,
+     it_kna1  TYPE TABLE OF ty_kna1,
+     wa_kna1  LIKE LINE OF it_kna1,
+     it_t006a TYPE TABLE OF ty_t006a,
+     wa_t006a LIKE LINE OF it_t006a.
+
+SELECT-OPTIONS p_vbeln FOR wa_zvbrk_01-vbeln.
+
+SELECT * FROM zvbrk_01 INTO TABLE it_zvbrk_01 WHERE vbeln IN p_vbeln[].
+SELECT * FROM zvbrp_011 INTO TABLE it_zvbrp_011 WHERE vbeln IN p_vbeln[].
+
+SELECT kunnr name1 FROM kna1 INTO  TABLE it_kna1 FOR ALL ENTRIES IN it_zvbrk_01 WHERE kunnr EQ it_zvbrk_01-kunrg.
+SELECT msehi mseht FROM t006a INTO table it_t006a FOR ALL ENTRIES IN it_zvbrp_011 WHERE msehi EQ it_zvbrp_011-vrkme.
+sort it_zvbrp_011 by vbeln.
+LOOP AT it_zvbrp_011 INTO wa_zvbrp_011.
+  READ TABLE it_zvbrk_01 INTO wa_zvbrk_01 WITH KEY  vbeln = wa_zvbrp_011-vbeln.
+  READ TABLE it_kna1 INTO wa_kna1 WITH KEY kunnr = wa_zvbrk_01-kunrg.
+  READ TABLE it_t006a INTO wa_t006a WITH KEY msehi = wa_zvbrp_011-vrkme.
+  WRITE:/ wa_zvbrk_01-vbeln,
+  / wa_zvbrk_01-fkdat,
+  / wa_kna1-name1,
+  / wa_zvbrk_01-netwr.
+
+
+  WRITE: / 'Item',
+  20'Material',
+  40'Quantity',
+  60'unitofm',
+  80'Networth'.
+
+  WRITE:/ wa_zvbrp_011-posnr,
+  20 wa_zvbrp_011-matnr,
+  40 wa_zvbrp_011-fkimg,
+  60 wa_t006a-mseht,
+  80 wa_zvbrp_011-netwr.
+ENDLOOP.
+
+ 
+
+ 
 

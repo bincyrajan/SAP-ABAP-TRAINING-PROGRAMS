@@ -1,4 +1,5 @@
-"create 2 tables , one is for header data and another for item data .Generate invoice based on the document no and also print payer name,print description of uom.
+"create 2 tables , one is for header data and another for item data .
+"Generate invoice based on the document no and also print payer name,print description of uom.
 " Header table : zvbrk_01
 " item table : zvbrp_011
 " Payer name :kna1

@@ -1,5 +1,3 @@
-"Billing Document with sub-routine
-
 *&---------------------------------------------------------------------*
 *& Report ZBINCY_BILLINGDOC_SUBROUTINE
 *&---------------------------------------------------------------------*
@@ -19,10 +17,10 @@ TYPES : BEGIN OF ty_t006a,
           mseht TYPE t006a-mseht,
         END OF ty_t006a.
 " Data Objects
-DATA : it_vbrk TYPE TABLE OF Zbilling,
-       wa_vbrk LIKE LINE OF it_vbrk.
-DATA : it_vbrp TYPE TABLE OF zitem,
-       wa_vbrp LIKE LINE OF it_vbrp.
+DATA : it_zvbrk_01 TYPE TABLE OF zvbrk_01,
+       wa_zvbrk_01 LIKE LINE OF it_zvbrk_01.
+DATA : it_zvbrp_011 TYPE TABLE OF zvbrp_011,
+       wa_zvbrp_011 LIKE LINE OF it_zvbrp_011.
 DATA : it_header TYPE zdemo_t_header,
        it_item   TYPE zdemo_t_item,
        wa_header LIKE LINE OF it_header,
@@ -35,12 +33,12 @@ DATA : wa_kna1  LIKE LINE OF it_kna1,
 " Provide selection screen for user Input
 
 START-OF-SELECTION.
-  SELECT-OPTIONS s_vbeln FOR wa_vbrk-vbeln.
+  SELECT-OPTIONS s_vbeln FOR wa_zvbrk_01-vbeln.
   " Data Selection
-  PERFORM get_header IN PROGRAM zalfy_billing_form USING s_vbeln[]
+  PERFORM get_header IN PROGRAM ZBINCY_BILLINGDOC_SUB USING s_vbeln[]
                                                   CHANGING it_header.
 
-  PERFORM get_item IN PROGRAM zalfy_billing_form USING s_vbeln[]
+  PERFORM get_item IN PROGRAM ZBINCY_BILLINGDOC_SUB USING s_vbeln[]
                                                   CHANGING it_item.
 
 
@@ -48,20 +46,20 @@ START-OF-SELECTION.
 
 
 *  SORT it_item BY vbeln.
-  LOOP AT it_header INTO wa_header.
+   loop AT it_header INTO wa_header.
 
 
-    SKIP.
+  SKIP.
 *    READ TABLE it_header INTO wa_header WITH KEY vbeln = wa_item-vbeln.
-    WRITE : / wa_header-vbeln,
-              wa_header-name1,
-              wa_header-fkdat,
-              wa_header-netwr.
-    HIDE wa_header-vbeln.
-    SKIP.
-    CLEAR wa_header.
-  ENDLOOP.
+  WRITE : / wa_header-vbeln,
+            wa_header-name1,
+            wa_header-fkdat,
+            wa_header-netwr.
+  HIDE wa_header-vbeln.
+  SKIP.
   CLEAR wa_header.
+ENDLOOP.
+CLEAR wa_header.
 
 AT LINE-SELECTION.
   WRITE : / 'Item',
@@ -90,7 +88,125 @@ AT USER-COMMAND.
     WHEN OTHERS.
   ENDCASE.
 
----------------------------------------------------------------------------------------------------------
 
-Subroutine
+----------------------------------------------------------------------------------------------------------------------------------------------
+subrotine
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_BILLINGDOC_SUB
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBINCY_BILLINGDOC_SUB.
+
+
+TYPES tr_vbeln TYPE RANGE OF zvbrk_01-vbeln.
+
+FORM get_header USING r_vbeln TYPE tr_vbeln CHANGING p_it_header TYPE zdemo_t_header.
+  TYPES : BEGIN OF ty_kna1,
+            kunnr TYPE kna1-kunnr,
+            name1 TYPE kna1-name1,
+          END OF ty_kna1.
+  DATA : lt_zvbrk_01 TYPE TABLE OF zvbrk_01,
+         lw_zvbrk_01 LIKE LINE OF lt_zvbrk_01.
+
+  DATA : lt_kna1 TYPE STANDARD TABLE OF ty_kna1,
+         lw_kna1 LIKE LINE OF lt_kna1.
+
+  DATA lw_header LIKE LINE OF p_it_header.
+
+  SELECT * FROM zvbrk_01 INTO TABLE lt_zvbrk_01 WHERE vbeln IN r_vbeln.
+  IF sy-subrc IS INITIAL.
+    SELECT kunnr name1 FROM kna1 INTO TABLE lt_kna1 FOR ALL ENTRIES IN lt_zvbrk_01 WHERE kunnr EQ lt_zvbrk_01-kunrg.
+  ENDIF.
+
+  LOOP AT lt_zvbrk_01 INTO lw_zvbrk_01.
+    READ TABLE lt_kna1 INTO lw_kna1 WITH KEY kunnr = lw_zvbrk_01-kunrg.
+    MOVE-CORRESPONDING lw_zvbrk_01 TO lw_header.
+    MOVE-CORRESPONDING lw_kna1 TO lw_header.
+    APPEND lw_header TO p_it_header.
+    CLEAR lw_header.
+  ENDLOOP.
+ENDFORM.
+
+FORM get_item USING r_vbeln TYPE tr_vbeln CHANGING p_it_item TYPE ZDEMO_T_item.
+  TYPES : BEGIN OF ty_t006a,
+            msehi TYPE t006a-msehi,
+            mseht TYPE t006a-mseht,
+          END OF ty_t006a.
+  DATA : lt_zvbrp_011 TYPE TABLE OF zvbrp_011,
+         lw_zvbrp_011 LIKE LINE OF lt_zvbrp_011.
+  DATA : lt_t006a TYPE STANDARD TABLE OF ty_t006a,
+         lw_t006a LIKE LINE OF lt_t006a.
+
+  DATA lw_item LIKE LINE OF p_it_item.
+
+  SELECT * FROM zvbrp_011 INTO TABLE lt_zvbrp_011 WHERE vbeln IN r_vbeln.
+  IF sy-subrc IS INITIAL.
+    SELECT msehi mseht FROM t006a INTO TABLE lt_t006a FOR ALL ENTRIES IN lt_zvbrp_011 WHERE msehi EQ lt_zvbrp_011-vrkme.
+  ENDIF.
+  LOOP AT lt_zvbrp_011 INTO lw_zvbrp_011.
+    READ TABLE lt_t006a INTO lw_t006a WITH KEY msehi = lw_zvbrp_011-vrkme.
+    MOVE-CORRESPONDING lw_zvbrp_011 TO lw_item.
+    MOVE-CORRESPONDING lw_t006a TO lw_item.
+    APPEND lw_item TO p_it_item.
+    CLEAR lw_item.
+  ENDLOOP.
+
+
+ENDFORM.
+
+
+FORM get_billing_data USING r_vbeln TYPE tr_vbeln CHANGING p_it_header TYPE zdemo_t_header p_it_item TYPE zdemo_t_item.
+  TYPES : BEGIN OF ty_kna1,
+            kunnr TYPE kna1-kunnr,
+            name1 TYPE kna1-name1,
+          END OF ty_kna1.
+  DATA : lt_vbrk TYPE TABLE OF Zbilling,
+         lw_vbrk LIKE LINE OF lt_vbrk.
+
+  DATA : lt_kna1 TYPE STANDARD TABLE OF ty_kna1,
+         lw_kna1 LIKE LINE OF lt_kna1.
+
+  DATA lw_header LIKE LINE OF p_it_header.
+
+  SELECT * FROM Zbilling INTO TABLE lt_vbrk WHERE vbeln IN r_vbeln.
+  IF sy-subrc IS INITIAL.
+    SELECT kunnr name1 FROM kna1 INTO TABLE lt_kna1 FOR ALL ENTRIES IN lt_vbrk WHERE kunnr EQ lt_vbrk-kunrg.
+  ENDIF.
+
+  LOOP AT lt_vbrk INTO lw_vbrk.
+    READ TABLE lt_kna1 INTO lw_kna1 WITH KEY kunnr = lw_vbrk-kunrg.
+    MOVE-CORRESPONDING lw_vbrk TO lw_header.
+    MOVE-CORRESPONDING lw_kna1 TO lw_header.
+    APPEND lw_header TO p_it_header.
+    CLEAR lw_header.
+  ENDLOOP.
+
+  TYPES : BEGIN OF ty_t006a,
+            msehi TYPE t006a-msehi,
+            mseht TYPE t006a-mseht,
+          END OF ty_t006a.
+  DATA : lt_vbrp TYPE TABLE OF Zitem,
+         lw_vbrp LIKE LINE OF lt_vbrp.
+  DATA : lt_t006a TYPE STANDARD TABLE OF ty_t006a,
+         lw_t006a LIKE LINE OF lt_t006a.
+
+  DATA lw_item LIKE LINE OF p_it_item.
+
+  SELECT * FROM zitem INTO TABLE lt_vbrp WHERE vbeln IN r_vbeln.
+  IF sy-subrc IS INITIAL.
+    SELECT msehi mseht FROM t006a INTO TABLE lt_t006a FOR ALL ENTRIES IN lt_vbrp WHERE msehi EQ lt_vbrp-vrkme.
+  ENDIF.
+  LOOP AT lt_vbrp INTO lw_vbrp.
+    READ TABLE lt_t006a INTO lw_t006a WITH KEY msehi = lw_vbrp-vrkme.
+    MOVE-CORRESPONDING lw_vbrp TO lw_item.
+    MOVE-CORRESPONDING lw_t006a TO lw_item.
+    APPEND lw_item TO p_it_item.
+    CLEAR lw_item.
+  ENDLOOP.
+
+ENDFORM.
+
+
+
 

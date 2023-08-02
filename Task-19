@@ -1,0 +1,94 @@
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_MATERIAL_COLOR_DANGER
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBINCY_MATERIAL_COLOR_DANGER.
+TYPES: BEGIN OF ty_mard,
+         matnr TYPE mard-matnr,
+         werks TYPE mard-werks,
+         lgort TYPE mard-lgort,
+       END OF ty_mard.
+
+
+
+
+TYPES: BEGIN OF ty_range,
+         sign TYPE Char1,
+         opti TYPE char2,
+         low  TYPE matnr,
+         high TYPE matnr,
+       END OF ty_range.
+
+
+DATA: it_zjr_matnr_check TYPE STANDARD TABLE OF zjr_matnr_check,
+      wa_zjr_matnr_check LIKE LINE OF it_zjr_matnr_check.
+
+DATA: it_mard TYPE TABLE OF ty_mard,
+      wa_mard LIKE LINE OF it_mard.
+
+
+
+DATA: It_range_s TYPE STANDARD TABLE OF ty_range,
+      it_range_d TYPE STANDARD TABLE OF ty_range,
+      wa_range   TYPE ty_range.
+
+
+
+SELECT-OPTIONS st_werks FOR wa_mard-werks.
+
+
+WRITE:/ 'Material',
+20 'PLANTNO',
+
+40 'StorageLocation'.
+
+
+
+SELECT matnr werks lgort FROM mard INTO TABLE it_mard WHERE werks IN st_werks.
+
+
+SELECT * FROM zjr_matnr_check INTO TABLE it_zjr_matnr_check.
+
+LOOP AT it_zjr_matnr_check INTO wa_zjr_matnr_check.
+
+  IF wa_zjr_matnr_check-name EQ 'DANGER'.
+    MOVE-CORRESPONDING wa_zjr_matnr_check TO wa_range.
+    APPEND wa_range TO it_range_d.
+  ENDIF.
+  IF wa_zjr_matnr_check-name EQ 'SAFE'.
+    MOVE-CORRESPONDING wa_zjr_matnr_check TO wa_range.
+    APPEND wa_range TO it_range_s.
+  ENDIF.
+  CLEAR wa_range.
+ENDLOOP.
+
+
+LOOP AT it_mard INTO wa_mard.
+
+  IF wa_mard-matnr IN It_range_d.
+
+    FORMAT COLOR COL_NEGATIVE.
+
+    WRITE:/ wa_mard-matnr,
+         20 wa_mard-werks,
+          40 wa_mard-lgort.
+
+
+  ELSEIF wa_mard-matnr IN It_range_s.
+    FORMAT COLOR COL_POSITIVE.
+    WRITE:/ wa_mard-matnr,
+           20 wa_mard-werks,
+            40 wa_mard-lgort.
+
+
+  ELSE.
+
+    WRITE:/ wa_mard-matnr,
+          20 wa_mard-werks,
+           40 wa_mard-lgort.
+
+  ENDIF.
+
+  FORMAT COLOR OFF.
+ENDLOOP.

@@ -1,0 +1,89 @@
+*&---------------------------------------------------------------------*
+*& Report ZBINCY_PLANT_COLORFORMAT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBINCY_PLANT_COLORFORMAT.
+DATA p_werks TYPE mard-werks.
+SELECT-OPTIONS st_werks FOR p_werks.
+
+
+TYPES: BEGIN OF ty_mard,
+         matnr TYPE mard-matnr,
+         werks TYPE mard-werks,
+         lgort TYPE mard-lgort,
+       END OF ty_mard.
+
+*TYPES :BEGIN OF ty_makt,
+*  matnr TYPE makt-matnr,
+*  maktx TYPE makt-maktx,
+*    END OF ty_makt.
+
+"Data st_mard TYPE ty_mard.
+
+DATA v_plantName TYPE t001w-name1.
+
+
+
+TYPES: BEGIN OF ty_makt,
+         matnr TYPE makt-matnr,
+         maktx TYPE makt-maktx,
+       END OF ty_makt.
+
+TYPES: BEGIN OF ty_t001w,
+         werks TYPE t001w-werks,
+         name1 TYPE t001w-werks,
+       END OF ty_t001w.
+
+
+
+DATA: it_mard TYPE TABLE OF ty_mard,
+      wa_mard LIKE LINE OF it_mard.
+
+
+DATA: it_makt  TYPE TABLE OF ty_makt,
+      wa_makt  LIKE LINE OF it_makt,
+      it_t001w TYPE TABLE OF ty_t001w,
+      wa_t001w LIKE LINE OF it_t001w.
+
+
+
+
+
+WRITE:/ 'Material',
+20 'MaterialDescription',
+60 'PLANTNO',
+80 'PLANTNAME',
+100 'StorageLocation'.
+
+"SELECT SINGLE name1 FROM t001w INTO v_plantName WHERE werks in st_werks.
+
+
+SELECT matnr werks lgort FROM mard INTO TABLE it_mard WHERE werks IN st_werks.
+SELECT werks name1 FROM t001w INTO TABLE it_t001w FOR ALL ENTRIES IN it_mard WHERE werks EQ it_mard-werks.
+SELECT matnr maktx FROM makt INTO TABLE it_makt FOR ALL ENTRIES IN it_mard WHERE matnr EQ it_mard-matnr AND spras EQ sy-langu.
+
+LOOP AT it_mard INTO wa_mard.
+  READ TABLE it_makt INTO wa_makt WITH KEY matnr = wa_mard-matnr.
+  READ TABLE it_t001w INTO wa_t001w WITH KEY werks = wa_mard-werks.
+
+  IF wa_mard-matnr EQ 'ATV112SLED' OR wa_mard-matnr EQ 'NTV22SLED' OR wa_mard-matnr EQ 'ATV92SLED'.
+
+
+    FORMAT COLOR COL_NEGATIVE.
+
+    WRITE:/ wa_mard-matnr,
+    20 wa_makt-maktx,
+    60 wa_mard-werks,
+    80 v_plantName,
+    120 wa_mard-lgort.
+    FORMAT COLOR OFF.
+  ELSE.
+
+    WRITE:/ wa_mard-matnr,
+20 wa_makt-maktx,
+60 wa_mard-werks,
+80 v_plantName,
+120 wa_mard-lgort.
+  ENDIF.
+ENDLOOP.
